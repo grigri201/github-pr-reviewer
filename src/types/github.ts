@@ -48,6 +48,7 @@ export interface PullRequestFile {
   raw_url: string;
   contents_url: string;
   patch?: string;
+  binary?: boolean;
 }
 
 /**

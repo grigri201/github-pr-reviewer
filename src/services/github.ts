@@ -83,4 +83,103 @@ export class GitHubService {
 
     return { pullRequest, files };
   }
+
+  /**
+   * 获取文件内容
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param path 文件路径
+   * @param ref 分支或提交SHA
+   * @returns 文件内容
+   */
+  async getFileContent(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string
+  ): Promise<string> {
+    try {
+      const { data } = await this.octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref,
+      });
+
+      // 检查是否是文件
+      if ("content" in data && "encoding" in data) {
+        // 解码Base64内容
+        if (data.encoding === "base64") {
+          return Buffer.from(data.content, "base64").toString("utf-8");
+        }
+        return data.content;
+      }
+
+      throw new Error("不是有效的文件");
+    } catch (error) {
+      console.error(`获取文件内容失败: ${path}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取PR差异
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param pullNumber PR编号
+   * @returns PR差异内容
+   */
+  async getPullRequestDiff(
+    owner: string,
+    repo: string,
+    pullNumber: number
+  ): Promise<string> {
+    try {
+      const response = await this.octokit.request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+        {
+          owner,
+          repo,
+          pull_number: pullNumber,
+          headers: {
+            accept: "application/vnd.github.v3.diff",
+          },
+        }
+      );
+
+      return response.data as unknown as string;
+    } catch (error) {
+      console.error(`获取PR差异失败: PR #${pullNumber}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 添加PR评论
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param pullNumber PR编号
+   * @param body 评论内容
+   * @returns 评论结果
+   */
+  async addPullRequestComment(
+    owner: string,
+    repo: string,
+    pullNumber: number,
+    body: string
+  ): Promise<any> {
+    try {
+      const { data } = await this.octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: pullNumber,
+        body,
+      });
+
+      return data;
+    } catch (error) {
+      console.error(`添加PR评论失败: PR #${pullNumber}`, error);
+      throw error;
+    }
+  }
 }
