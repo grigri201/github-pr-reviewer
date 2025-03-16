@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/core";
 import { restEndpointMethods } from "@octokit/plugin-rest-endpoint-methods";
-import type { PullRequestFile, PullRequestInfo } from "../types/github";
+import type { components } from "@octokit/openapi-types";
+import type { PullRequest } from "@octokit/webhooks-types";
 
 // 创建扩展了 REST API 方法的 Octokit 类
 const MyOctokit = Octokit.plugin(restEndpointMethods);
@@ -30,14 +31,14 @@ export class GitHubService {
     owner: string,
     repo: string,
     pullNumber: number
-  ): Promise<PullRequestInfo> {
+  ): Promise<PullRequest> {
     const { data } = await this.octokit.rest.pulls.get({
       owner,
       repo,
       pull_number: pullNumber,
     });
 
-    return data as unknown as PullRequestInfo;
+    return data as unknown as PullRequest;
   }
 
   /**
@@ -51,14 +52,14 @@ export class GitHubService {
     owner: string,
     repo: string,
     pullNumber: number
-  ): Promise<PullRequestFile[]> {
+  ): Promise<components["schemas"]["diff-entry"][]> {
     const { data } = await this.octokit.rest.pulls.listFiles({
       owner,
       repo,
       pull_number: pullNumber,
     });
 
-    return data as unknown as PullRequestFile[];
+    return data as unknown as components["schemas"]["diff-entry"][];
   }
 
   /**
@@ -73,8 +74,8 @@ export class GitHubService {
     repo: string,
     pullNumber: number
   ): Promise<{
-    pullRequest: PullRequestInfo;
-    files: PullRequestFile[];
+    pullRequest: PullRequest;
+    files: components["schemas"]["diff-entry"][];
   }> {
     const [pullRequest, files] = await Promise.all([
       this.getPullRequest(owner, repo, pullNumber),

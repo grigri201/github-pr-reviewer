@@ -2,7 +2,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { createWebhookRoutes } from "./routes/webhook";
-import reviewRoutes from "./routes/review";
 
 // 加载环境变量
 dotenv.config();
@@ -41,9 +40,6 @@ app.get("/health", (req, res) => {
 
 // 设置 webhook 路由
 app.use("/webhook", createWebhookRoutes(GITHUB_TOKEN, WEBHOOK_SECRET));
-
-// 设置审查路由
-app.use("/api/review", reviewRoutes);
 
 // 启动服务器
 app.listen(PORT, () => {
