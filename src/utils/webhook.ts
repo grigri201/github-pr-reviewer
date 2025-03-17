@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { components } from "@octokit/openapi-types";
 
 /**
  * 验证 GitHub webhook 签名
@@ -32,13 +33,9 @@ export function verifyWebhookSignature(
  * @param file PR 文件信息
  * @returns 格式化后的字符串
  */
-export function formatFileChanges(file: {
-  filename: string;
-  status: string;
-  additions: number;
-  deletions: number;
-  patch?: string;
-}): string {
+export function formatFileChanges(
+  file: components["schemas"]["diff-entry"]
+): string {
   const statusEmoji =
     {
       added: "🟢",

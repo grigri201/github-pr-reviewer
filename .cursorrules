@@ -9,16 +9,19 @@
     "version": "latest"
   },
   "dependencies": {
-    "octokit": "latest",
+    "@octokit/core": "latest",
+    "@octokit/plugin-rest-endpoint-methods": "latest",
+    "@octokit/webhooks-types": "latest",
     "express": "latest",
     "body-parser": "latest",
-    "crypto": "latest",
-    "dotenv": "latest"
+    "dotenv": "latest",
+    "openai": "latest"
   },
   "devDependencies": {
     "typescript": "latest",
     "@types/express": "latest",
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "bun-types": "latest"
   },
   "style": {
     "indentation": "spaces",
@@ -28,12 +31,13 @@
   },
   "structure": {
     "src": {
-      "controllers": "处理业务逻辑",
       "routes": "定义API路由",
-      "services": "处理GitHub API交互",
-      "types": "TypeScript类型定义",
-      "utils": "工具函数",
-      "middleware": "中间件"
+      "services": {
+        "description": "处理GitHub API和OpenAI交互",
+        "openai": "OpenAI API集成"
+      },
+      "middleware": "中间件",
+      "utils": "工具函数"
     }
   },
   "requirements": [
@@ -44,6 +48,7 @@
     "实现PR创建通知",
     "获取PR详细信息",
     "获取修改的文件和内容",
+    "使用OpenAI API进行代码审查",
     "在控制台显示信息"
   ]
 } 

@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/core";
 import { restEndpointMethods } from "@octokit/plugin-rest-endpoint-methods";
-import type { PullRequestFile, PullRequestInfo } from "../types/github";
+import type { components } from "@octokit/openapi-types";
+import type { PullRequest } from "@octokit/webhooks-types";
 
 // 创建扩展了 REST API 方法的 Octokit 类
 const MyOctokit = Octokit.plugin(restEndpointMethods);
@@ -30,14 +31,14 @@ export class GitHubService {
     owner: string,
     repo: string,
     pullNumber: number
-  ): Promise<PullRequestInfo> {
+  ): Promise<PullRequest> {
     const { data } = await this.octokit.rest.pulls.get({
       owner,
       repo,
       pull_number: pullNumber,
     });
 
-    return data as unknown as PullRequestInfo;
+    return data as unknown as PullRequest;
   }
 
   /**
@@ -51,14 +52,14 @@ export class GitHubService {
     owner: string,
     repo: string,
     pullNumber: number
-  ): Promise<PullRequestFile[]> {
+  ): Promise<components["schemas"]["diff-entry"][]> {
     const { data } = await this.octokit.rest.pulls.listFiles({
       owner,
       repo,
       pull_number: pullNumber,
     });
 
-    return data as unknown as PullRequestFile[];
+    return data as unknown as components["schemas"]["diff-entry"][];
   }
 
   /**
@@ -73,8 +74,8 @@ export class GitHubService {
     repo: string,
     pullNumber: number
   ): Promise<{
-    pullRequest: PullRequestInfo;
-    files: PullRequestFile[];
+    pullRequest: PullRequest;
+    files: components["schemas"]["diff-entry"][];
   }> {
     const [pullRequest, files] = await Promise.all([
       this.getPullRequest(owner, repo, pullNumber),
@@ -82,5 +83,108 @@ export class GitHubService {
     ]);
 
     return { pullRequest, files };
+  }
+
+  /**
+   * 获取文件内容
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param path 文件路径
+   * @param ref 分支或提交SHA
+   * @returns 文件内容
+   */
+  async getFileContent(
+    owner: string,
+    repo: string,
+    path: string,
+  ): Promise<string> {
+    try {
+      let filePath = path.replace(
+        `https://api.github.com/repos/${owner}/${repo}/contents/`,
+        ""
+      );
+      // Remove ref suffix from file path if present
+      filePath = filePath.replace(/\?ref.+/, '');
+      const { data } = await this.octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+      });
+
+      // 检查是否是文件
+      if ("content" in data && "encoding" in data) {
+        // 解码Base64内容
+        if (data.encoding === "base64") {
+          return Buffer.from(data.content, "base64").toString("utf-8");
+        }
+        return data.content;
+      }
+
+      throw new Error("不是有效的文件");
+    } catch (error) {
+      console.error(`获取文件内容失败: ${path}`, error);
+      return "";
+    }
+  }
+
+  /**
+   * 获取PR差异
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param pullNumber PR编号
+   * @returns PR差异内容
+   */
+  async getPullRequestDiff(
+    owner: string,
+    repo: string,
+    pullNumber: number
+  ): Promise<string> {
+    try {
+      const response = await this.octokit.request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+        {
+          owner,
+          repo,
+          pull_number: pullNumber,
+          headers: {
+            accept: "application/vnd.github.v3.diff",
+          },
+        }
+      );
+
+      return response.data as unknown as string;
+    } catch (error) {
+      console.error(`获取PR差异失败: PR #${pullNumber}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 添加PR评论
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param pullNumber PR编号
+   * @param body 评论内容
+   * @returns 评论结果
+   */
+  async addPullRequestComment(
+    owner: string,
+    repo: string,
+    pullNumber: number,
+    body: string
+  ): Promise<any> {
+    try {
+      const { data } = await this.octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: pullNumber,
+        body,
+      });
+
+      return data;
+    } catch (error) {
+      console.error(`添加PR评论失败: PR #${pullNumber}`, error);
+      throw error;
+    }
   }
 }

@@ -24,9 +24,7 @@ export function webhookVerification(secret: string) {
       return res.status(400).json({ error: "Missing GitHub event type" });
     }
 
-    // 将事件类型添加到请求对象中，方便后续处理
-    req.headers["github-event"] = event;
-
+    // 不需要再添加到请求对象中，因为已经有 x-github-event 头部
     next();
   };
 }

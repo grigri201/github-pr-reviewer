@@ -10,6 +10,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // 验证必要的环境变量
 if (!GITHUB_TOKEN) {
@@ -20,6 +21,10 @@ if (!GITHUB_TOKEN) {
 if (!WEBHOOK_SECRET) {
   console.error("错误: 缺少 WEBHOOK_SECRET 环境变量");
   process.exit(1);
+}
+
+if (!OPENAI_API_KEY) {
+  console.error("警告: 缺少 OPENAI_API_KEY 环境变量，AI 代码审查功能将不可用");
 }
 
 // 创建 Express 应用
@@ -41,5 +46,6 @@ app.listen(PORT, () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
   console.log("准备接收 GitHub webhook 请求...");
   console.log(`Webhook URL: http://your-domain.com/webhook`);
+  console.log(`代码审查 API: http://your-domain.com/api/review`);
   console.log("提示: 使用 ngrok 等工具可以将本地服务暴露到公网");
 });
