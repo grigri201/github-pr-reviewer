@@ -33,8 +33,8 @@ export function createWebhookRoutes(
           res.status(200).json(result);
           break;
         default:
-          console.log(`未处理的事件: ${event}`);
-          res.status(200);
+          console.log(`未处理的事件: \n${JSON.stringify(event)}`);
+          res.status(200).end();
           break;
       }
     } catch (error) {
@@ -48,7 +48,7 @@ export function createWebhookRoutes(
 
 export function matchEvent(event: WebhookEvent) {
   if (
-    "pullRequest" in event &&
+    "pull_request" in event &&
     "action" in event &&
     event.action === "opened"
   ) {
