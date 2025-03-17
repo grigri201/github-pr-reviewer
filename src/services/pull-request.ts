@@ -1,6 +1,7 @@
 import { GitHubService } from "./github";
 import { formatFileChanges } from "../utils/webhook";
-import { PullRequestOpenedEvent, WebhookEvent } from "@octokit/webhooks-types";
+import { PullRequestOpenedEvent, PullRequestSynchronizeEvent, WebhookEvent } from "@octokit/webhooks-types";
+import openAIService from "./openai";
 
 /**
  * PR 控制器类，处理 PR 相关的业务逻辑
@@ -18,10 +19,9 @@ export class PullRequestService {
 
   /**
    * 处理 PR 创建事件
-   * @param req Express 请求对象
-   * @param res Express 响应对象
+   * @param event PR 创建事件
    */
-  async handlePullRequestOpened(event: PullRequestOpenedEvent) {
+  async handlePullRequestOpened(event: PullRequestOpenedEvent | PullRequestSynchronizeEvent) {
     try {
       const { repository, pull_request } = event;
 
@@ -64,6 +64,25 @@ export class PullRequestService {
         `\n总计: +${pull_request.additions}/-${pull_request.deletions} (${pull_request.changed_files} 个文件)`
       );
       console.log(`===== PR 信息结束 =====\n`);
+
+      let fileContents = "";
+      // 对每个修改的文件进行代码审查
+      for (const file of files) {
+        fileContents += `
+        file name:
+        ${file.filename}
+
+        diff content:
+        ${file.patch}
+        `
+      }
+
+      
+      const reviewResult = await openAIService.reviewCode(fileContents);
+        
+      console.log(`\n===== 文件审查结果: =====`);
+      console.log(reviewResult);
+      console.log(`===== 审查结束 =====\n`);
 
       return {
         message: "Pull request processed successfully",

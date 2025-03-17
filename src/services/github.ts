@@ -97,14 +97,18 @@ export class GitHubService {
     owner: string,
     repo: string,
     path: string,
-    ref: string
   ): Promise<string> {
     try {
+      let filePath = path.replace(
+        `https://api.github.com/repos/${owner}/${repo}/contents/`,
+        ""
+      );
+      // Remove ref suffix from file path if present
+      filePath = filePath.replace(/\?ref.+/, '');
       const { data } = await this.octokit.rest.repos.getContent({
         owner,
         repo,
-        path,
-        ref,
+        path: filePath,
       });
 
       // 检查是否是文件
@@ -119,7 +123,7 @@ export class GitHubService {
       throw new Error("不是有效的文件");
     } catch (error) {
       console.error(`获取文件内容失败: ${path}`, error);
-      throw error;
+      return "";
     }
   }
 

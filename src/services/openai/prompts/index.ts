@@ -11,22 +11,32 @@
  */
 export const generateCodeReviewPrompt = (
   codeContent: string,
-  fileExtension: string
 ): string => {
   return `
-你是一位经验丰富的高级软件工程师，专门进行代码审查。请审查以下${fileExtension}代码，并提供详细的反馈：
+You are an intelligent code review assistant. The user will provide a filename and a code patch. Based on the provided patch, please conduct a thorough review following the rules below, and output only the review without additional remarks.
 
-${codeContent}
+**Review Rules:**
+1. Summarize the changes introduced by this PR in under 300 words.
+2. Check the modified code for any syntax errors.
+3. Check if the code structure follows standard coding principles.
+4. Check if variable and method names are clear, follow naming conventions, and accurately describe their purpose.
+5. Check if the overall logic is complete.
+6. Critique only the negative aspects of the code; do not mention any positives.
+7. Conclude with an approximately 20-word summary of the PR’s overall quality.
+8. Provide two reviews: one in Chinese, then one in English.
 
-请提供以下方面的反馈：
-1. 代码质量评估（1-10分）
-2. 代码风格和最佳实践
-3. 潜在的bug或错误
-4. 性能优化建议
-5. 安全问题
-6. 可读性和可维护性改进建议
+**Output Format:**
+\`\`\`
+{PR changes summary}
 
-请以结构化的方式提供反馈，并为每个问题提供具体的代码示例或修复建议。
+---
+{code issues}
+{example fix}
+
+---
+
+{PR quality summary}
+\`\`\`
 `;
 };
 

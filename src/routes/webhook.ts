@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { PullRequestService } from "../services/pull-request";
 import { webhookVerification } from "../middleware/webhook";
-import { PullRequestOpenedEvent, WebhookEvent } from "@octokit/webhooks-types";
+import { PullRequestOpenedEvent, PullRequestSynchronizeEvent, WebhookEvent } from "@octokit/webhooks-types";
 
 /**
  * 创建 webhook 路由
@@ -27,8 +27,14 @@ export function createWebhookRoutes(
       const eventType = matchEvent(event);
       switch (eventType) {
         case "pullRequestOpened":
-          const result = await prController.handlePullRequestOpened(
+          const openedResult = await prController.handlePullRequestOpened(
             event as PullRequestOpenedEvent
+          );
+          res.status(200).json(openedResult);
+          break;
+        case "pullRequestSynchronized":
+          const result = await prController.handlePullRequestOpened(
+            event as PullRequestSynchronizeEvent
           );
           res.status(200).json(result);
           break;
@@ -47,12 +53,14 @@ export function createWebhookRoutes(
 }
 
 export function matchEvent(event: WebhookEvent) {
-  if (
-    "pull_request" in event &&
-    "action" in event &&
-    event.action === "opened"
-  ) {
+  if (!("pull_request" in event) || !("action" in event)) {
+    return null;
+  }
+  if (event.action === "opened") {
     return "pullRequestOpened";
+  }
+  if (event.action === "synchronize") {
+    return "pullRequestSynchronized";
   }
   return null;
 }
