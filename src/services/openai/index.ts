@@ -16,18 +16,40 @@ class OpenAIService {
     codeContent: string,
   ): Promise<string> {
     try {
-      const prompt = generateCodeReviewPrompt(codeContent);
-
-      console.log(prompt);
       const response = await openaiClient.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o",
+        model: process.env.OPENAI_MODEL || "gpt-o1",
         messages: [
           {
             role: "system",
             content:
-              "你是一位专业的代码审查助手，提供详细、有建设性的代码反馈。",
+              `
+You are an intelligent code review assistant. The user will provide a Pull Request content,es. Based on the provided patches, please conduct a thorough review following the rules below, and output only the review without additional remarks.
+
+**Review Rules:**
+1. Summarize the changes introduced by this PR in under 300 words.
+2. Check the modified code for any syntax errors.
+3. Check if the code structure follows standard coding principles.
+4. Check if variable and method names are clear, follow naming conventions, and accurately describe their purpose.
+5. Check if the overall logic is complete.
+6. Critique only the negative aspects of the code; do not mention any positives.
+7. Conclude with an approximately 20-word summary of the PR’s overall quality.
+8. Provide two reviews: one in Chinese, then one in English.
+
+**Output Format:**
+\`\`\`
+{PR changes summary}
+
+---
+{code issues}
+{example fix}
+
+---
+
+{PR quality summary}
+\`\`\`
+`,
           },
-          { role: "user", content: prompt },
+          { role: "user", content: codeContent },
         ],
         temperature: 0.3,
       });
