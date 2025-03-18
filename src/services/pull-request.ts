@@ -84,6 +84,14 @@ export class PullRequestService {
       console.log(reviewResult);
       console.log(`===== 审查结束 =====\n`);
 
+      // 将审查结果作为评论添加到 PR
+      await this.githubService.addPullRequestComment(
+        owner,
+        repo,
+        pullNumber,
+        `## AI 代码审查结果\n\n${reviewResult}`
+      );
+
       return {
         message: "Pull request processed successfully",
         pr_number: pullNumber,
