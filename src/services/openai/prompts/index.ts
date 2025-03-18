@@ -26,6 +26,9 @@ You are an intelligent code review assistant. The user will provide a filename a
 8. Provide two reviews: one in Chinese, then one in English.
 
 **Output Format:**
+
+### Chinese Review
+
 \`\`\`
 {PR changes summary}
 
@@ -35,6 +38,19 @@ You are an intelligent code review assistant. The user will provide a filename a
 
 ---
 
+{PR quality summary}
+\`\`\`
+
+### English Review
+
+\`\`\`
+{PR changes summary}
+
+---
+{code issues}
+{example fix}
+
+---
 {PR quality summary}
 \`\`\`
 `;
